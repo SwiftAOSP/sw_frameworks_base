@@ -205,12 +205,12 @@ public abstract class AppsFilterBase implements AppsFilterSnapshot {
         return mQueriesViaComponent.contains(callingAppId, targetAppId);
     }
 
-    protected boolean isImplicitlyQueryable(int callingAppId, int targetAppId) {
-        return mImplicitlyQueryable.contains(callingAppId, targetAppId);
+    protected boolean isImplicitlyQueryable(int callingUid, int targetUid) {
+        return mImplicitlyQueryable.contains(callingUid, targetUid);
     }
 
-    protected boolean isRetainedImplicitlyQueryable(int callingAppId, int targetAppId) {
-        return mRetainedImplicitlyQueryable.contains(callingAppId, targetAppId);
+    protected boolean isRetainedImplicitlyQueryable(int callingUid, int targetUid) {
+        return mRetainedImplicitlyQueryable.contains(callingUid, targetUid);
     }
 
     protected boolean isQueryableViaUsesLibrary(int callingAppId, int targetAppId) {
@@ -322,9 +322,15 @@ public abstract class AppsFilterBase implements AppsFilterSnapshot {
                     || callingAppId == targetPkgSetting.getAppId()) {
                 return false;
             } else if (Process.isSdkSandboxUid(callingAppId)) {
+                final int targetAppId = targetPkgSetting.getAppId();
+                final int targetUid = UserHandle.getUid(userId, targetAppId);
                 // we only allow sdk sandbox processes access to forcequeryable packages
                 return !isForceQueryable(targetPkgSetting.getAppId())
+<<<<<<< HEAD
                       && !isImplicitlyQueryable(callingAppId, targetPkgSetting.getAppId());
+=======
+                      && !isImplicitlyQueryable(callingUid, targetUid);
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
             }
             if (mCacheReady) { // use cache
                 if (!shouldFilterApplicationUsingCache(callingUid,

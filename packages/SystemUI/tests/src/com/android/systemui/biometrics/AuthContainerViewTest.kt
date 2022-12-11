@@ -29,6 +29,7 @@ import android.testing.AndroidTestingRunner
 import android.testing.TestableLooper
 import android.testing.TestableLooper.RunWithLooper
 import android.testing.ViewUtils
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -48,11 +49,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.anyLong
 import org.mockito.Mockito.eq
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.junit.MockitoJUnit
 import org.mockito.Mockito.`when` as whenever
+import org.mockito.junit.MockitoJUnit
 
 @RunWith(AndroidTestingRunner::class)
 @RunWithLooper(setAsMainLooper = true)
@@ -87,7 +89,26 @@ class AuthContainerViewTest : SysuiTestCase() {
     @Test
     fun testNotifiesAnimatedIn() {
         initializeFingerprintContainer()
+<<<<<<< HEAD
         verify(callback).onDialogAnimatedIn()
+=======
+        verify(callback).onDialogAnimatedIn(authContainer?.requestId ?: 0L)
+    }
+
+    @Test
+    fun testDismissesOnBack() {
+        val container = initializeFingerprintContainer(addToView = true)
+        assertThat(container.parent).isNotNull()
+        val root = container.rootView
+
+        // Simulate back invocation
+        container.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK))
+        container.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
+        waitForIdleSync()
+
+        assertThat(container.parent).isNull()
+        assertThat(root.isAttachedToWindow).isFalse()
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
     }
 
     @Test
@@ -96,13 +117,13 @@ class AuthContainerViewTest : SysuiTestCase() {
         container.dismissFromSystemServer()
         waitForIdleSync()
 
-        verify(callback, never()).onDialogAnimatedIn()
+        verify(callback, never()).onDialogAnimatedIn(anyLong())
 
         container.addToView()
         waitForIdleSync()
 
         // attaching the view resets the state and allows this to happen again
-        verify(callback).onDialogAnimatedIn()
+        verify(callback).onDialogAnimatedIn(authContainer?.requestId ?: 0L)
     }
 
     @Test
@@ -110,14 +131,17 @@ class AuthContainerViewTest : SysuiTestCase() {
         val container = initializeFingerprintContainer()
         waitForIdleSync()
 
-        verify(callback).onDialogAnimatedIn()
+        val requestID = authContainer?.requestId ?: 0L
+
+        verify(callback).onDialogAnimatedIn(requestID)
 
         container.onWindowFocusChanged(false)
         waitForIdleSync()
 
         verify(callback).onDismissed(
-            eq(AuthDialogCallback.DISMISSED_USER_CANCELED),
-            eq<ByteArray?>(null) /* credentialAttestation */
+                eq(AuthDialogCallback.DISMISSED_USER_CANCELED),
+                eq<ByteArray?>(null), /* credentialAttestation */
+                eq(requestID)
         )
         assertThat(container.parent).isNull()
     }
@@ -131,8 +155,9 @@ class AuthContainerViewTest : SysuiTestCase() {
         waitForIdleSync()
 
         verify(callback).onDismissed(
-            eq(AuthDialogCallback.DISMISSED_BIOMETRIC_AUTHENTICATED),
-            eq<ByteArray?>(null) /* credentialAttestation */
+                eq(AuthDialogCallback.DISMISSED_BIOMETRIC_AUTHENTICATED),
+                eq<ByteArray?>(null), /* credentialAttestation */
+                eq(authContainer?.requestId ?: 0L)
         )
         assertThat(container.parent).isNull()
     }
@@ -146,11 +171,13 @@ class AuthContainerViewTest : SysuiTestCase() {
         waitForIdleSync()
 
         verify(callback).onSystemEvent(
-            eq(BiometricConstants.BIOMETRIC_SYSTEM_EVENT_EARLY_USER_CANCEL)
+                eq(BiometricConstants.BIOMETRIC_SYSTEM_EVENT_EARLY_USER_CANCEL),
+                eq(authContainer?.requestId ?: 0L)
         )
         verify(callback).onDismissed(
-            eq(AuthDialogCallback.DISMISSED_USER_CANCELED),
-            eq<ByteArray?>(null) /* credentialAttestation */
+                eq(AuthDialogCallback.DISMISSED_USER_CANCELED),
+                eq<ByteArray?>(null), /* credentialAttestation */
+                eq(authContainer?.requestId ?: 0L)
         )
         assertThat(container.parent).isNull()
     }
@@ -164,8 +191,9 @@ class AuthContainerViewTest : SysuiTestCase() {
         waitForIdleSync()
 
         verify(callback).onDismissed(
-            eq(AuthDialogCallback.DISMISSED_BUTTON_NEGATIVE),
-            eq<ByteArray?>(null) /* credentialAttestation */
+                eq(AuthDialogCallback.DISMISSED_BUTTON_NEGATIVE),
+                eq<ByteArray?>(null), /* credentialAttestation */
+                eq(authContainer?.requestId ?: 0L)
         )
         assertThat(container.parent).isNull()
     }
@@ -180,7 +208,7 @@ class AuthContainerViewTest : SysuiTestCase() {
         )
         waitForIdleSync()
 
-        verify(callback).onTryAgainPressed()
+        verify(callback).onTryAgainPressed(authContainer?.requestId ?: 0L)
     }
 
     @Test
@@ -192,8 +220,9 @@ class AuthContainerViewTest : SysuiTestCase() {
         waitForIdleSync()
 
         verify(callback).onDismissed(
-            eq(AuthDialogCallback.DISMISSED_ERROR),
-            eq<ByteArray?>(null) /* credentialAttestation */
+                eq(AuthDialogCallback.DISMISSED_ERROR),
+                eq<ByteArray?>(null), /* credentialAttestation */
+                eq(authContainer?.requestId ?: 0L)
         )
         assertThat(authContainer!!.parent).isNull()
     }
@@ -209,7 +238,7 @@ class AuthContainerViewTest : SysuiTestCase() {
         )
         waitForIdleSync()
 
-        verify(callback).onDeviceCredentialPressed()
+        verify(callback).onDeviceCredentialPressed(authContainer?.requestId ?: 0L)
         assertThat(container.hasCredentialView()).isTrue()
     }
 
@@ -297,6 +326,16 @@ class AuthContainerViewTest : SysuiTestCase() {
     }
 
     @Test
+    fun testLayoutParams_hasDimbehindWindowFlag() {
+        val layoutParams = AuthContainerView.getLayoutParams(windowToken, "")
+        val lpFlags = layoutParams.flags
+        val lpDimAmount = layoutParams.dimAmount
+
+        assertThat((lpFlags and WindowManager.LayoutParams.FLAG_DIM_BEHIND) != 0).isTrue()
+        assertThat(lpDimAmount).isGreaterThan(0f)
+    }
+
+    @Test
     fun testLayoutParams_excludesImeInsets() {
         val layoutParams = AuthContainerView.getLayoutParams(windowToken, "")
         assertThat((layoutParams.fitInsetsTypes and WindowInsets.Type.ime()) == 0).isTrue()
@@ -312,12 +351,20 @@ class AuthContainerViewTest : SysuiTestCase() {
         container.onAuthenticationFailed(BiometricAuthenticator.TYPE_FACE, "failed")
         waitForIdleSync()
 
+<<<<<<< HEAD
         verify(callback, never()).onTryAgainPressed()
+=======
+        verify(callback, never()).onTryAgainPressed(anyLong())
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
 
         container.onPointerDown()
         waitForIdleSync()
 
+<<<<<<< HEAD
         verify(callback).onTryAgainPressed()
+=======
+        verify(callback).onTryAgainPressed(authContainer?.requestId ?: 0L)
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
     }
 
     private fun initializeFingerprintContainer(

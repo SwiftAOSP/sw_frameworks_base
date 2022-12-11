@@ -17,6 +17,8 @@
 package com.android.internal.widget;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.BitmapDrawable;
@@ -279,4 +281,52 @@ public class LocalImageResolverTest {
         // This drawable must not be loaded - if it was, the code ignored the package specification.
         assertThat(d).isNull();
     }
+<<<<<<< HEAD
+=======
+
+    @Test
+    public void resolveResourcesForIcon_notAResourceIcon_returnsNull() {
+        Icon icon = Icon.createWithContentUri(Uri.parse("some_uri"));
+        assertThat(LocalImageResolver.resolveResourcesForIcon(mContext, icon)).isNull();
+    }
+
+    @Test
+    public void resolveResourcesForIcon_localPackageIcon_returnsPackageResources() {
+        Icon icon = Icon.createWithResource(mContext, R.drawable.test32x24);
+        assertThat(LocalImageResolver.resolveResourcesForIcon(mContext, icon))
+                .isSameInstanceAs(mContext.getResources());
+    }
+
+    @Test
+    public void resolveResourcesForIcon_iconWithoutPackageSpecificed_returnsPackageResources() {
+        Icon icon = Icon.createWithResource("", R.drawable.test32x24);
+        assertThat(LocalImageResolver.resolveResourcesForIcon(mContext, icon))
+                .isSameInstanceAs(mContext.getResources());
+    }
+
+    @Test
+    public void resolveResourcesForIcon_systemPackageSpecified_returnsSystemPackage() {
+        Icon icon = Icon.createWithResource("android", R.drawable.test32x24);
+        assertThat(LocalImageResolver.resolveResourcesForIcon(mContext, icon)).isSameInstanceAs(
+                Resources.getSystem());
+    }
+
+    @Test
+    public void resolveResourcesForIcon_differentPackageSpecified_returnsPackageResources() throws
+            PackageManager.NameNotFoundException {
+        String pkg = "com.android.settings";
+        Resources res = mContext.getPackageManager().getResourcesForApplication(pkg);
+        int resId = res.getIdentifier("ic_android", "drawable", pkg);
+        Icon icon = Icon.createWithResource(pkg, resId);
+
+        assertThat(LocalImageResolver.resolveResourcesForIcon(mContext, icon).getDrawable(resId,
+                mContext.getTheme())).isNotNull();
+    }
+
+    @Test
+    public void resolveResourcesForIcon_invalidPackageSpecified_returnsNull() {
+        Icon icon = Icon.createWithResource("invalid.package", R.drawable.test32x24);
+        assertThat(LocalImageResolver.resolveResourcesForIcon(mContext, icon)).isNull();
+    }
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
 }

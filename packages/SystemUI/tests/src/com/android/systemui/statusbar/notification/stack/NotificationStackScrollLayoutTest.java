@@ -59,20 +59,19 @@ import com.android.systemui.ExpandHelper;
 import com.android.systemui.R;
 import com.android.systemui.SysuiTestCase;
 import com.android.systemui.dump.DumpManager;
+import com.android.systemui.shade.ShadeController;
 import com.android.systemui.statusbar.EmptyShadeView;
 import com.android.systemui.statusbar.NotificationShelf;
 import com.android.systemui.statusbar.NotificationShelfController;
 import com.android.systemui.statusbar.StatusBarState;
 import com.android.systemui.statusbar.SysuiStatusBarStateController;
 import com.android.systemui.statusbar.notification.collection.NotificationEntry;
-import com.android.systemui.statusbar.notification.collection.legacy.NotificationGroupManagerLegacy;
 import com.android.systemui.statusbar.notification.collection.render.GroupExpansionManager;
 import com.android.systemui.statusbar.notification.collection.render.GroupMembershipManager;
 import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow;
 import com.android.systemui.statusbar.notification.row.FooterView;
 import com.android.systemui.statusbar.phone.CentralSurfaces;
 import com.android.systemui.statusbar.phone.KeyguardBypassController;
-import com.android.systemui.statusbar.phone.ShadeController;
 import com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager;
 import com.android.systemui.statusbar.phone.UnlockedScreenOffAnimationController;
 
@@ -101,8 +100,8 @@ public class NotificationStackScrollLayoutTest extends SysuiTestCase {
     @Rule public MockitoRule mockito = MockitoJUnit.rule();
     @Mock private CentralSurfaces mCentralSurfaces;
     @Mock private SysuiStatusBarStateController mBarState;
-    @Mock private NotificationGroupManagerLegacy mGroupMembershipManger;
-    @Mock private NotificationGroupManagerLegacy mGroupExpansionManager;
+    @Mock private GroupMembershipManager mGroupMembershipManger;
+    @Mock private GroupExpansionManager mGroupExpansionManager;
     @Mock private DumpManager mDumpManager;
     @Mock private ExpandHelper mExpandHelper;
     @Mock private EmptyShadeView mEmptyShadeView;
@@ -251,7 +250,11 @@ public class NotificationStackScrollLayoutTest extends SysuiTestCase {
         // Validate that when the animation ends the stackEndHeight is recalculated immediately
         clearInvocations(mAmbientState);
         mStackScroller.setPanelFlinging(false);
+<<<<<<< HEAD
         verify(mAmbientState).setIsFlinging(eq(false));
+=======
+        verify(mAmbientState).setFlinging(eq(false));
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
         verify(mAmbientState).setStackEndHeight(anyFloat());
         verify(mAmbientState).setStackHeight(anyFloat());
     }

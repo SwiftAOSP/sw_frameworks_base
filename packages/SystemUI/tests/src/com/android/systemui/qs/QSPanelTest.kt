@@ -158,6 +158,42 @@ class QSPanelTest : SysuiTestCase() {
         assertThat(qsPanel.paddingBottom).isEqualTo(padding)
     }
 
+<<<<<<< HEAD
+=======
+    @Test
+    fun testTopPadding_notCombinedHeaders() {
+        qsPanel.setUsingCombinedHeaders(false)
+        val padding = 10
+        val paddingCombined = 100
+        context.orCreateTestableResources.addOverride(R.dimen.qs_panel_padding_top, padding)
+        context.orCreateTestableResources.addOverride(
+                R.dimen.qs_panel_padding_top_combined_headers, paddingCombined)
+
+        qsPanel.updatePadding()
+        assertThat(qsPanel.paddingTop).isEqualTo(padding)
+    }
+
+    @Test
+    fun testTopPadding_combinedHeaders() {
+        qsPanel.setUsingCombinedHeaders(true)
+        val padding = 10
+        val paddingCombined = 100
+        context.orCreateTestableResources.addOverride(R.dimen.qs_panel_padding_top, padding)
+        context.orCreateTestableResources.addOverride(
+                R.dimen.qs_panel_padding_top_combined_headers, paddingCombined)
+
+        qsPanel.updatePadding()
+        assertThat(qsPanel.paddingTop).isEqualTo(paddingCombined)
+    }
+
+    @Test
+    fun testSetSquishinessFraction_noCrash() {
+        qsPanel.addView(qsPanel.mTileLayout as View, 0)
+        qsPanel.addView(FrameLayout(context))
+        qsPanel.setSquishinessFraction(0.5f)
+    }
+
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
     private infix fun View.isLeftOf(other: View): Boolean {
         val rect = Rect()
         getBoundsOnScreen(rect)

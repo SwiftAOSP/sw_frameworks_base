@@ -56,7 +56,9 @@ import javax.inject.Inject;
 
 /**
  * A class which manages the bouncer on the lockscreen.
+ * @deprecated Use KeyguardBouncerRepository
  */
+@Deprecated
 public class KeyguardBouncer {
 
     private static final String TAG = "KeyguardBouncer";
@@ -220,6 +222,10 @@ public class KeyguardBouncer {
                     && !mKeyguardUpdateMonitor.getCachedIsUnlockWithFingerprintPossible(
                             KeyguardUpdateMonitor.getCurrentUser())
                     && !needsFullscreenBouncer()
+<<<<<<< HEAD
+=======
+                    && !mKeyguardUpdateMonitor.isFaceLockedOut()
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
                     && !mKeyguardUpdateMonitor.userNeedsStrongAuth()
                     && !mKeyguardBypassController.getBypassEnabled()) {
                 mHandler.postDelayed(mShowRunnable, BOUNCER_FACE_DELAY);
@@ -266,6 +272,9 @@ public class KeyguardBouncer {
 
     private void setVisibility(@View.Visibility int visibility) {
         mContainer.setVisibility(visibility);
+        if (mKeyguardViewController != null) {
+            mKeyguardViewController.onBouncerVisibilityChanged(visibility);
+        }
         dispatchVisibilityChanged();
     }
 
@@ -641,7 +650,11 @@ public class KeyguardBouncer {
         /**
          * Invoked when the bouncer expansion reaches {@link KeyguardBouncer#EXPANSION_VISIBLE}.
          * This is NOT called each time the bouncer is shown, but rather only when the fully
+<<<<<<< HEAD
          * shown amount has changed based on the panel expansion. The bouncer is visibility
+=======
+         * shown amount has changed based on the panel expansion. The bouncer's visibility
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
          * can still change when the expansion amount hasn't changed.
          * See {@link KeyguardBouncer#isShowing()} for the checks for the bouncer showing state.
          */

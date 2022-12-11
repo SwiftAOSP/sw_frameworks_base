@@ -23,6 +23,7 @@ import android.hardware.radio.V1_5.AccessNetwork;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Locale;
 
 /**
  * Contains access network related constants.
@@ -114,7 +115,11 @@ public final class AccessNetworkConstants {
 
         /** @hide */
         public static @RadioAccessNetworkType int fromString(@NonNull String str) {
+<<<<<<< HEAD
             switch (str.toUpperCase()) {
+=======
+            switch (str.toUpperCase(Locale.ROOT)) {
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
                 case "UNKNOWN": return UNKNOWN;
                 case "GERAN": return GERAN;
                 case "UTRAN": return UTRAN;

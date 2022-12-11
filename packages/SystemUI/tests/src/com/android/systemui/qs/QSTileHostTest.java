@@ -22,6 +22,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
@@ -32,11 +33,19 @@ import static org.mockito.Mockito.when;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+<<<<<<< HEAD
+=======
+import android.content.SharedPreferences;
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
 import android.database.ContentObserver;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.UserHandle;
 import android.testing.AndroidTestingRunner;
+<<<<<<< HEAD
+=======
+import android.util.SparseArray;
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
 import android.view.View;
 
 import androidx.annotation.Nullable;
@@ -60,12 +69,17 @@ import com.android.systemui.qs.external.TileServiceKey;
 import com.android.systemui.qs.external.TileServiceRequestController;
 import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
+import com.android.systemui.settings.UserFileManager;
 import com.android.systemui.settings.UserTracker;
 import com.android.systemui.shared.plugins.PluginManager;
 import com.android.systemui.statusbar.phone.AutoTileManager;
 import com.android.systemui.statusbar.phone.CentralSurfaces;
 import com.android.systemui.statusbar.phone.StatusBarIconController;
 import com.android.systemui.tuner.TunerService;
+<<<<<<< HEAD
+=======
+import com.android.systemui.util.FakeSharedPreferences;
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
 import com.android.systemui.util.concurrency.FakeExecutor;
 import com.android.systemui.util.settings.FakeSettings;
 import com.android.systemui.util.settings.SecureSettings;
@@ -76,6 +90,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.stubbing.Answer;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -130,9 +145,18 @@ public class QSTileHostTest extends SysuiTestCase {
     private TileLifecycleManager.Factory mTileLifecycleManagerFactory;
     @Mock
     private TileLifecycleManager mTileLifecycleManager;
+    @Mock
+    private UserFileManager mUserFileManager;
+
+    private SparseArray<SharedPreferences> mSharedPreferencesByUser;
 
     private FakeExecutor mMainExecutor;
 
+<<<<<<< HEAD
+    private FakeExecutor mMainExecutor;
+
+=======
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
     private QSTileHost mQSTileHost;
 
     @Before
@@ -140,17 +164,36 @@ public class QSTileHostTest extends SysuiTestCase {
         MockitoAnnotations.initMocks(this);
         mMainExecutor = new FakeExecutor(new FakeSystemClock());
 
+<<<<<<< HEAD
+=======
+        mSharedPreferencesByUser = new SparseArray<>();
+
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
         when(mTileServiceRequestControllerBuilder.create(any()))
                 .thenReturn(mTileServiceRequestController);
         when(mTileLifecycleManagerFactory.create(any(Intent.class), any(UserHandle.class)))
                 .thenReturn(mTileLifecycleManager);
+        when(mUserFileManager.getSharedPreferences(anyString(), anyInt(), anyInt()))
+                .thenAnswer((Answer<SharedPreferences>) invocation -> {
+                    assertEquals(QSTileHost.TILES, invocation.getArgument(0));
+                    int userId = invocation.getArgument(2);
+                    if (!mSharedPreferencesByUser.contains(userId)) {
+                        mSharedPreferencesByUser.put(userId, new FakeSharedPreferences());
+                    }
+                    return mSharedPreferencesByUser.get(userId);
+                });
 
         mSecureSettings = new FakeSettings();
         saveSetting("");
         mQSTileHost = new TestQSTileHost(mContext, mIconController, mDefaultFactory, mMainExecutor,
                 mPluginManager, mTunerService, mAutoTiles, mDumpManager, mCentralSurfaces,
                 mQSLogger, mUiEventLogger, mUserTracker, mSecureSettings, mCustomTileStatePersister,
+<<<<<<< HEAD
                 mTileServiceRequestControllerBuilder, mTileLifecycleManagerFactory);
+=======
+                mTileServiceRequestControllerBuilder, mTileLifecycleManagerFactory,
+                mUserFileManager);
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
 
         mSecureSettings.registerContentObserverForUser(SETTING, new ContentObserver(null) {
             @Override
@@ -528,6 +571,121 @@ public class QSTileHostTest extends SysuiTestCase {
         assertEquals("spec1", getSetting());
     }
 
+<<<<<<< HEAD
+=======
+    @Test
+    public void testIsTileAdded_true() {
+        int user = mUserTracker.getUserId();
+        getSharedPreferenecesForUser(user)
+                .edit()
+                .putBoolean(CUSTOM_TILE.flattenToString(), true)
+                .apply();
+
+        assertTrue(mQSTileHost.isTileAdded(CUSTOM_TILE, user));
+    }
+
+    @Test
+    public void testIsTileAdded_false() {
+        int user = mUserTracker.getUserId();
+        getSharedPreferenecesForUser(user)
+                .edit()
+                .putBoolean(CUSTOM_TILE.flattenToString(), false)
+                .apply();
+
+        assertFalse(mQSTileHost.isTileAdded(CUSTOM_TILE, user));
+    }
+
+    @Test
+    public void testIsTileAdded_notSet() {
+        int user = mUserTracker.getUserId();
+
+        assertFalse(mQSTileHost.isTileAdded(CUSTOM_TILE, user));
+    }
+
+    @Test
+    public void testIsTileAdded_differentUser() {
+        int user = mUserTracker.getUserId();
+        mUserFileManager.getSharedPreferences(QSTileHost.TILES, 0, user)
+                .edit()
+                .putBoolean(CUSTOM_TILE.flattenToString(), true)
+                .apply();
+
+        assertFalse(mQSTileHost.isTileAdded(CUSTOM_TILE, user + 1));
+    }
+
+    @Test
+    public void testSetTileAdded_true() {
+        int user = mUserTracker.getUserId();
+        mQSTileHost.setTileAdded(CUSTOM_TILE, user, true);
+
+        assertTrue(getSharedPreferenecesForUser(user)
+                .getBoolean(CUSTOM_TILE.flattenToString(), false));
+    }
+
+    @Test
+    public void testSetTileAdded_false() {
+        int user = mUserTracker.getUserId();
+        mQSTileHost.setTileAdded(CUSTOM_TILE, user, false);
+
+        assertFalse(getSharedPreferenecesForUser(user)
+                .getBoolean(CUSTOM_TILE.flattenToString(), false));
+    }
+
+    @Test
+    public void testSetTileAdded_differentUser() {
+        int user = mUserTracker.getUserId();
+        mQSTileHost.setTileAdded(CUSTOM_TILE, user, true);
+
+        assertFalse(getSharedPreferenecesForUser(user + 1)
+                .getBoolean(CUSTOM_TILE.flattenToString(), false));
+    }
+
+    @Test
+    public void testSetTileRemoved_afterCustomTileChangedByUser() {
+        int user = mUserTracker.getUserId();
+        saveSetting(CUSTOM_TILE_SPEC);
+
+        // This will be done by TileServiceManager
+        mQSTileHost.setTileAdded(CUSTOM_TILE, user, true);
+
+        mQSTileHost.changeTilesByUser(mQSTileHost.mTileSpecs, List.of("spec1"));
+        assertFalse(getSharedPreferenecesForUser(user)
+                .getBoolean(CUSTOM_TILE.flattenToString(), false));
+    }
+
+    @Test
+    public void testSetTileRemoved_removedByUser() {
+        int user = mUserTracker.getUserId();
+        saveSetting(CUSTOM_TILE_SPEC);
+
+        // This will be done by TileServiceManager
+        mQSTileHost.setTileAdded(CUSTOM_TILE, user, true);
+
+        mQSTileHost.removeTileByUser(CUSTOM_TILE);
+        mMainExecutor.runAllReady();
+        assertFalse(getSharedPreferenecesForUser(user)
+                .getBoolean(CUSTOM_TILE.flattenToString(), false));
+    }
+
+    @Test
+    public void testSetTileRemoved_removedBySystem() {
+        int user = mUserTracker.getUserId();
+        saveSetting("spec1" + CUSTOM_TILE_SPEC);
+
+        // This will be done by TileServiceManager
+        mQSTileHost.setTileAdded(CUSTOM_TILE, user, true);
+
+        mQSTileHost.removeTile(CUSTOM_TILE_SPEC);
+        mMainExecutor.runAllReady();
+        assertFalse(getSharedPreferenecesForUser(user)
+                .getBoolean(CUSTOM_TILE.flattenToString(), false));
+    }
+
+    private SharedPreferences getSharedPreferenecesForUser(int user) {
+        return mUserFileManager.getSharedPreferences(QSTileHost.TILES, 0, user);
+    }
+
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
     private class TestQSTileHost extends QSTileHost {
         TestQSTileHost(Context context, StatusBarIconController iconController,
                 QSFactory defaultFactory, Executor mainExecutor,
@@ -537,11 +695,21 @@ public class QSTileHostTest extends SysuiTestCase {
                 UserTracker userTracker, SecureSettings secureSettings,
                 CustomTileStatePersister customTileStatePersister,
                 TileServiceRequestController.Builder tileServiceRequestControllerBuilder,
+<<<<<<< HEAD
                 TileLifecycleManager.Factory tileLifecycleManagerFactory) {
             super(context, iconController, defaultFactory, mainExecutor, pluginManager,
                     tunerService, autoTiles, dumpManager, Optional.of(centralSurfaces), qsLogger,
                     uiEventLogger, userTracker, secureSettings, customTileStatePersister,
                     tileServiceRequestControllerBuilder, tileLifecycleManagerFactory);
+=======
+                TileLifecycleManager.Factory tileLifecycleManagerFactory,
+                UserFileManager userFileManager) {
+            super(context, iconController, defaultFactory, mainExecutor, pluginManager,
+                    tunerService, autoTiles, dumpManager, Optional.of(centralSurfaces), qsLogger,
+                    uiEventLogger, userTracker, secureSettings, customTileStatePersister,
+                    tileServiceRequestControllerBuilder, tileLifecycleManagerFactory,
+                    userFileManager);
+>>>>>>> 00e5a18be27a12d55faacfe31d5e2f57c377a7f5
         }
 
         @Override
